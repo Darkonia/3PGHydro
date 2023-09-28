@@ -18,14 +18,14 @@ climate$date <- as.Date(climate$date,format="%d/%m/%Y")
 #load 3PG parameters
 Parameter <- read.csv("parameter.csv") #P.abies from Forrester et al. 2021; F. sylvatica from Augustynczik et al 2017
 #select species
-p <- Parameter$Fagus.sylvatica
+p <- Parameter$Picea.abies
 
 #Site & Stand characteristics
 lat <- 47.5
 StartDate <- "01/01/1960"
 StandAgei <- 30
 EndAge <- 80
-StemNoi <- 600
+StemNoi <- 1300
 WSi <- 135
 WFi <- 8
 WRi <- 15
@@ -65,14 +65,31 @@ RocksDR <- 0.4
 
 #Yearly Output
 OutputRes <- "yearly"
+gridE <- seq(599,StemNoi, by=100)
+years <- c(30,40,50,60)
 
-deepP_E <- numeric()
-for(fall in seq(0,StemNoi, by=100)){
+
+deepP_E <- data.frame(matrix(ncol = length(years), nrow = length(gridE)))
+
+colnames(deepP_E) <- years
+watery_E <- deepP_E
+harvestVol_E <- deepP_E
+
+
+index = 0
+
+for(y in years){
+  print(paste("Thinning year",y))
+  index = index+1
+  d <- numeric()
+  w <- numeric()
+  h <- numeric()
+for(fall in gridE){
   stand = StemNoi-fall
   
   
   #Management
-  thinAges <- c(30)
+  thinAges <- c(y)
   if (stand == 0){
     thinAges <- NULL #c(30,40,50,60)
     thinVals <- NULL #c(450,400,350,300)
@@ -90,10 +107,46 @@ for(fall in seq(0,StemNoi, by=100)){
   print(stand)
   
   out_yearly <-  run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS,OutputRes)
-  deepP_E<- c(deepP_E,sum(out_yearly$DeepPercolation))
+  d<- c(d,sum(out_yearly$DeepPercolation,na.rm=TRUE))
+  w<- c(w,sum(out_yearly$DeepPercolation,na.rm=TRUE) + sum(out_yearly$RunOff,na.rm=TRUE) )
+  
+  h <- c(h, sum(out_yearly$Harvest_Vol, na.rm = TRUE) + out_yearly$StandVol[[EndAge - StandAgei ]] )
   print(sum(out_yearly$DeepPercolation,na.rm=TRUE))
 }
-deepP_E
+
+  
+  deepP_E[as.character(y)] <- d
+  watery_E[as.character(y)] <- w
+  harvestVol_E[as.character(y)] <-h
+  
 
 
+}
 
+par(mfrow=c(length(years),3))
+
+
+for(ye in 1:length(years)){
+plot(y=deepP_E[[ye]],x=gridE,main="deep percolation")
+plot(y=watery_E[[ye]],x=gridE,main="Water yield")
+
+plot(y=harvestVol_E[[ye]],x=gridE,main="Harvest Vol.")
+}
+
+matplot(gridE, cbind(harvestVol_E))
+
+
+# test = data.frame(watery_E)
+# harvestVol_E
+# test
+# plot(gridE, test$, type = "o", col = 1, ylim = c(0, 10000))
+# lines(gridE, test$c.1005.68158081076..997.18343526282..986.153828183939..971.967523430912.., type = "o", col = 2)
+# lines(gridE, test$c.1019.09348704208..1013.06061927857..1004.25365933774..991.73875969444.., type = "o", col = 3)
+# lines(gridE, test$c.1013.08814853206..1022.00872336945..1020.07076791268..1015.50793222938.., type = "o", col = 4)
+
+length(deepP_E)
+deepP_E[1]
+a<- list()
+a[[1]] = 123
+a[[1]]
+a[1]

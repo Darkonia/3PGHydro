@@ -65,7 +65,8 @@ RocksDR <- 0.4
 
 #Yearly Output
 OutputRes <- "yearly"
-gridE <- seq(599,StemNoi, by=100)
+gridE <- seq(99,StemNoi, by=25)
+gridE
 years <- c(30,40,50,60)
 
 
@@ -123,7 +124,8 @@ for(fall in gridE){
 
 }
 
-par(mfrow=c(length(years),3))
+
+
 
 
 for(ye in 1:length(years)){
@@ -139,11 +141,31 @@ matplot(gridE, cbind(harvestVol_E))
 # test = data.frame(watery_E)
 # harvestVol_E
 # test
-# plot(gridE, test$, type = "o", col = 1, ylim = c(0, 10000))
-# lines(gridE, test$c.1005.68158081076..997.18343526282..986.153828183939..971.967523430912.., type = "o", col = 2)
-# lines(gridE, test$c.1019.09348704208..1013.06061927857..1004.25365933774..991.73875969444.., type = "o", col = 3)
-# lines(gridE, test$c.1013.08814853206..1022.00872336945..1020.07076791268..1015.50793222938.., type = "o", col = 4)
+harvestVol_E
 
+
+####plotshttp://127.0.0.1:34067/graphics/plot_zoom_png?width=1920&height=1017
+par(mfrow=c(2,3))
+
+plot(gridE, deepP_E$"30" , type = "o", col = 1, ylim = c(0, 15000),main="deep percolation")
+lines(gridE, deepP_E$"40", type = "o", col = 2)
+lines(gridE, deepP_E$"50", type = "o", col = 3)
+lines(gridE,deepP_E$"60", type = "o", col = 4)
+
+plot(gridE, watery_E$"30" , type = "o", col = 1, ylim = c(0, 15000), main="Water yield")
+lines(gridE, watery_E$"40", type = "o", col = 2)
+lines(gridE, watery_E$"50", type = "o", col = 3)
+lines(gridE, watery_E$"60", type = "o", col = 4)
+
+plot(gridE, harvestVol_E$"30" , type = "o", col = 1, ylim = c(0, 1000), main="Harvest Vol.")
+lines(gridE, harvestVol_E$"40", type = "o", col = 2)
+lines(gridE, harvestVol_E$"50", type = "o", col = 3)
+lines(gridE, harvestVol_E$"60", type = "o", col = 4)
+
+harvestVol_E$"30"
+
+gridE
+length(harvestVol_E["30"])
 length(deepP_E)
 deepP_E[1]
 a<- list()

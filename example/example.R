@@ -3,7 +3,8 @@
 library(rpackage.3PGHydro)
 ?run_3PGhydro
 #
-setwd("YOURPATH")
+
+setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
 
 #climate data
 climate <- read.csv("climate.csv")
@@ -64,4 +65,3 @@ plot(out$LAI[730:1095],x=out$Date[730:1095],type="l",main="LAI")
 #Yearly Output
 OutputRes <- "yearly"
 out_yearly <-  run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS,OutputRes)
-

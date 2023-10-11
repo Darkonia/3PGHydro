@@ -67,7 +67,7 @@ RocksDR <- 0.4
 OutputRes <- "yearly"
 gridE <- seq(99,StemNoi, by=25)
 gridE
-years <- c(30,40,50,60)
+  years <- c(30,40,50,60)
 
 
 deepP_E <- data.frame(matrix(ncol = length(years), nrow = length(gridE)))

@@ -1,9 +1,61 @@
 library(devtools)
+library(rBDAT)
 install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
 library(rpackage.3PGHydro)
 ?run_3PGhydro
 #
 setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
+
+
+
+####Valuation functions
+getDiameterClass <- function(x, output) {
+  if (x < 7) {
+    output = -21
+  } else if (x < 10) {
+    output = -14
+  } else if (x < 15) {
+    output = 23
+  } else if (x < 20) {
+    output = 43
+  } else if (x < 25) {
+    output = 52
+  } else if (x < 30) {
+    output = 59
+  } else if (x < 35) {
+    output = 60
+  } else if (x < 40) {
+    output = 61
+  } else if (x < 50) {
+    output = 59
+  } else if (x < 60) {
+    output = 51
+  } else if (x >= 60) {
+    output = 43
+  }
+}
+
+
+
+moneyMaker <- function(x, output) {
+  
+  s <- x[3]
+  h <- x[4]
+  d <- as.numeric(x[6])
+  vol <- as.numeric(x[8])
+  print(d)
+  print(vol)
+  
+  price <- switch(s, "X"=0, "Sth"=getDiameterClass(d), "Ind"=14, "nvDh"= 14, 0)
+  print(price)
+  output = vol*price
+  
+  
+}
+
+
+###
+
 
 #climate data
 climate <- read.csv("Hornberg_climate.csv")
@@ -74,17 +126,18 @@ colnames(deepP_E) <- c("return")
 
 watery_E <- deepP_E
 harvestVol_E <- deepP_E
-
+profits_E <- deepP_E
 
 index = 0
-round(c(StemNoi*(1-gridE),StemNoi*(1-gridE)^2,StemNoi*(1-gridE)^3,StemNoi*(1-gridE)^4,StemNoi*(1-gridE)^5,StemNoi*(1-gridE)^6,StemNoi*(1-gridE)^7,StemNoi*(1-gridE)^8,StemNoi*(1-gridE)^9,StemNoi*(1-gridE)^10))
-
+asdef = floor(c(StemNoi*(1-gridE),StemNoi*(1-gridE)^2,StemNoi*(1-gridE)^3,StemNoi*(1-gridE)^4,StemNoi*(1-gridE)^5,StemNoi*(1-gridE)^6,StemNoi*(1-gridE)^7,StemNoi*(1-gridE)^8,StemNoi*(1-gridE)^9,StemNoi*(1-gridE)^10))
 
 
 index = index+1
 d <- numeric()
 w <- numeric()
 h <- numeric()
+p_e <- numeric()
+
 for(fall in gridE){
   stand = StemNoi-fall
   
@@ -104,14 +157,59 @@ for(fall in gridE){
   
   h <- c(h, sum(out_yearly$Harvest_Vol, na.rm = TRUE) + out_yearly$StandVol[[EndAge - StandAgei ]] )
   print(sum(out_yearly$DeepPercolation,na.rm=TRUE))
+  
+  out_yearly$Harvest_Height
+  #Estimate harvest value:
+  HH =out_yearly$Harvest_Height
+  HD = out_yearly$Harvest_DBH
+  #extract harvest years
+  HH = HH[thinAges-29]
+  HD = HD[thinAges-29]
+  #ignore years with 0 harvest
+  HH = HH[!HH == 0]
+  HD = HD[!HD == 0]
+  
+  if (length(HD) != 0){
+    
+
+    tree <- list(spp = rep(1,length(HD)), D1 = HD, H = HH)
+    tree
+    res <- buildTree(tree = tree)
+    #getSpeciesCode(inSp = c("Bu", "Fi"))
+    
+    
+    
+    
+    
+    
+    assortments = getAssortment(res)
+    assortments[is.na(assortments)] <- 0
+    assortments["p"] =apply(assortments, 1, moneyMaker, output = 'profitpT')
+    
+    h_interval= 5
+    start = 0
+    profits <- numeric()
+  
+    
+    for (hyear in seq_along(thinAges)) {
+      profits <- c(profits, thinVals[hyear]*sum(assortments[start+1:(start + h_interval),]$p, na.rm = TRUE))
+      start = start + h_interval
+    }
+    p_e <- c(p_e, sum(profits, na.rm = TRUE))
+    p_e
+    
+  } else {
+    p_e <- c(p_e, 0)
+  }
+  
+  
+  
 }
-thinVals
 
 deepP_E$return <- d
 watery_E$return <- w
-harvestVol_E$return <-h
-
-
+harvestVol_E$return <- h
+profits_E$return <- p_e
 
 
 
@@ -125,3 +223,23 @@ plot(gridE, watery_E$return , type = "o", col = 1, main="Water yield")
 
 
 plot(gridE, harvestVol_E$return , type = "o", col = 1, main="Harvest Vol.")
+
+
+plot(gridE, profits_E$return/1000, type = "o", col = 1, main="Harvest profit €")
+
+
+plot(gridE, watery_E$return*3.05/1000 , type = "o", col = 1, main="Water yield €")
+profits_E
+
+assortments
+falls[1]
+getwd()
+assortments
+thinVals
+StemNoi - thinVals[hyear]
+thinVals
+
+assortments
+profits
+
+sum(profits)

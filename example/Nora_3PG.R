@@ -4,7 +4,12 @@ install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
 library(rpackage.3PGHydro)
 ?run_3PGhydro
 #
-setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
+#setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
+getwd()
+#path home
+#setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
+#path office
+setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
 
 
 
@@ -115,10 +120,10 @@ plot(y=out_yearly$StemNo,x=out_yearly$StandAge,main="Stems",type="l",lwd=2)
 
 #Yearly Output
 OutputRes <- "yearly"
-gridE <- seq(0.01,0.61, by=0.01)
+gridE <- seq(0.01,0.51, by=0.01)
 gridE
 years <- c(30,40,50,60)
-
+ 
 
 deepP_E <- data.frame(matrix(ncol = length(1), nrow = length(gridE)))
 
@@ -136,6 +141,7 @@ index = index+1
 d <- numeric()
 w <- numeric()
 h <- numeric()
+stV <- numeric()
 p_e <- numeric()
 
 for(fall in gridE){
@@ -155,10 +161,12 @@ for(fall in gridE){
   d<- c(d,sum(out_yearly$DeepPercolation,na.rm=TRUE))
   w<- c(w,sum(out_yearly$DeepPercolation,na.rm=TRUE) + sum(out_yearly$RunOff,na.rm=TRUE) )
   
-  h <- c(h, sum(out_yearly$Harvest_Vol, na.rm = TRUE) + out_yearly$StandVol[[EndAge - StandAgei ]] )
+  h <- c(h, sum(out_yearly$Harvest_Vol, na.rm = TRUE) )
+  stV <- c(stV,out_yearly$StandVol[[EndAge - StandAgei ]])
+  
+
   print(sum(out_yearly$DeepPercolation,na.rm=TRUE))
   
-  out_yearly$Harvest_Height
   #Estimate harvest value:
   HH =out_yearly$Harvest_Height
   HD = out_yearly$Harvest_DBH
@@ -192,7 +200,8 @@ for(fall in gridE){
   
     
     for (hyear in seq_along(thinAges)) {
-      profits <- c(profits, thinVals[hyear]*sum(assortments[start+1:(start + h_interval),]$p, na.rm = TRUE))
+      harvestNo = out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
+      profits <- c(profits, harvestNo*sum(assortments[start+1:(start + h_interval),]$p, na.rm = TRUE))
       start = start + h_interval
     }
     p_e <- c(p_e, sum(profits, na.rm = TRUE))
@@ -206,10 +215,14 @@ for(fall in gridE){
   
 }
 
+
+standVol_E$return <- stV
 deepP_E$return <- d
 watery_E$return <- w
 harvestVol_E$return <- h
 profits_E$return <- p_e
+
+standVol_E$return
 
 
 
@@ -224,12 +237,11 @@ plot(gridE, watery_E$return , type = "o", col = 1, main="Water yield")
 
 plot(gridE, harvestVol_E$return , type = "o", col = 1, main="Harvest Vol.")
 
+plot(gridE, profits_E$return/1000, type = "o", col = 1, main="Harvest profit Euro")
 
-plot(gridE, profits_E$return/1000, type = "o", col = 1, main="Harvest profit €")
+plot(gridE, deepP_E$return*3.05*10/1000 ,  col = 2, main="Water profit Euro")
+deepP_E$return*3.05*10/1000
 
-
-plot(gridE, watery_E$return*3.05/1000 , type = "o", col = 1, main="Water yield €")
-profits_E
 
 assortments
 falls[1]
@@ -243,3 +255,6 @@ assortments
 profits
 
 sum(profits)
+
+HH[1]
+thinVals

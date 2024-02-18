@@ -4,12 +4,12 @@ install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
 library(rpackage.3PGHydro)
 ?run_3PGhydro
 #
-#setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
+setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
 getwd()
 #path home
 #setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
 #path office
-setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
+#getwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
 
 
 
@@ -98,18 +98,21 @@ thinWF <- rep(1,10)
 thinWR <- rep(1,10)
 thinWS <- rep(1,10)
 
-#Yearly Output
-OutputRes <- "yearly"
-out_yearly <-  run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS,OutputRes)
-#Some Plots:
-par(mfrow=c(2,2))
-plot(y=out_yearly$Height,x=out_yearly$StandAge,main="Height",type="l",lwd=2)
-points(y=c(17,24,28,29),x=c(31,50,70,80),col="blue",cex=2,pch=20)
-plot(y=out_yearly$avDBH,x=out_yearly$StandAge,main="DBH",type="l",lwd=2)
-points(y=c(17,26,33,37),x=c(31,50,70,80),col="blue",cex=2,pch=20)
-plot(y=out_yearly$StandVol,x=out_yearly$StandAge,main="Standing Volume",type="l",lwd=2)
-points(y=c(274,454,530,540),x=c(31,50,70,80),col="blue",cex=2,pch=20)
-plot(y=out_yearly$StemNo,x=out_yearly$StandAge,main="Stems",type="l",lwd=2)
+#valuation params
+endHarvest = TRUE
+
+# #Yearly Output
+# OutputRes <- "yearly"
+# out_yearly <-  run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS,OutputRes)
+# #Some Plots:
+# par(mfrow=c(2,2))
+# plot(y=out_yearly$Height,x=out_yearly$StandAge,main="Height",type="l",lwd=2)
+# points(y=c(17,24,28,29),x=c(31,50,70,80),col="blue",cex=2,pch=20)
+# plot(y=out_yearly$avDBH,x=out_yearly$StandAge,main="DBH",type="l",lwd=2)
+# points(y=c(17,26,33,37),x=c(31,50,70,80),col="blue",cex=2,pch=20)
+# plot(y=out_yearly$StandVol,x=out_yearly$StandAge,main="Standing Volume",type="l",lwd=2)
+# points(y=c(274,454,530,540),x=c(31,50,70,80),col="blue",cex=2,pch=20)
+# plot(y=out_yearly$StemNo,x=out_yearly$StandAge,main="Stems",type="l",lwd=2)
 
 
 
@@ -120,7 +123,7 @@ plot(y=out_yearly$StemNo,x=out_yearly$StandAge,main="Stems",type="l",lwd=2)
 
 #Yearly Output
 OutputRes <- "yearly"
-gridE <- seq(0.01,0.51, by=0.01)
+gridE <- seq(0.01,0.61, by=0.01)
 gridE
 years <- c(30,40,50,60)
  
@@ -132,7 +135,8 @@ colnames(deepP_E) <- c("return")
 watery_E <- deepP_E
 harvestVol_E <- deepP_E
 profits_E <- deepP_E
-
+standVol_E <- deepP_E
+harvestStems <- deepP_E
 index = 0
 asdef = floor(c(StemNoi*(1-gridE),StemNoi*(1-gridE)^2,StemNoi*(1-gridE)^3,StemNoi*(1-gridE)^4,StemNoi*(1-gridE)^5,StemNoi*(1-gridE)^6,StemNoi*(1-gridE)^7,StemNoi*(1-gridE)^8,StemNoi*(1-gridE)^9,StemNoi*(1-gridE)^10))
 
@@ -141,31 +145,34 @@ index = index+1
 d <- numeric()
 w <- numeric()
 h <- numeric()
+h_ <- numeric()
 stV <- numeric()
 p_e <- numeric()
 
 for(fall in gridE){
-  stand = StemNoi-fall
+  
+
   
   
   #Management
   thinAges <- c(35,40,45,50,55,60,65,70,75,80)
-  thinVals <- ceiling(c(StemNoi*(1-fall),StemNoi*(1-fall)^2,StemNoi*(1-fall)^3,StemNoi*(1-fall)^4,StemNoi*(1-fall)^5,StemNoi*(1-fall)^6,StemNoi*(1-fall)^7,StemNoi*(1-fall)^8,StemNoi*(1-fall)^9,StemNoi*(1-fall)^10))
+  thinVals <- rep(fall,   length(thinAges))#ceiling(c(StemNoi*(1-fall),StemNoi*(1-fall)^2,StemNoi*(1-fall)^3,StemNoi*(1-fall)^4,StemNoi*(1-fall)^5,StemNoi*(1-fall)^6,StemNoi*(1-fall)^7,StemNoi*(1-fall)^8,StemNoi*(1-fall)^9,StemNoi*(1-fall)^10))
   
-  thinWF <- rep(1,10)
-  thinWR <- rep(1,10)
-  thinWS <- rep(1,10)
-  print(stand)
+  thinWF <- rep(1,  length(thinAges))
+  thinWR <- rep(1,  length(thinAges))
+  thinWS <- rep(1,  length(thinAges))
+
   
   out_yearly <-  run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS,OutputRes)
+  print("flag 1")
   d<- c(d,sum(out_yearly$DeepPercolation,na.rm=TRUE))
   w<- c(w,sum(out_yearly$DeepPercolation,na.rm=TRUE) + sum(out_yearly$RunOff,na.rm=TRUE) )
-  
+  h_ <-c(h_, sum(out_yearly$Harvest_Stems, na.rm = TRUE) )
   h <- c(h, sum(out_yearly$Harvest_Vol, na.rm = TRUE) )
   stV <- c(stV,out_yearly$StandVol[[EndAge - StandAgei ]])
   
 
-  print(sum(out_yearly$DeepPercolation,na.rm=TRUE))
+  #print(sum(out_yearly$DeepPercolation,na.rm=TRUE))
   
   #Estimate harvest value:
   HH =out_yearly$Harvest_Height
@@ -174,14 +181,16 @@ for(fall in gridE){
   HH = HH[thinAges-29]
   HD = HD[thinAges-29]
   #ignore years with 0 harvest
-  HH = HH[!HH == 0]
-  HD = HD[!HD == 0]
+  HH = HH[!HH == 0][ !is.na(HH)]
+  HD = HD[!HD == 0][ !is.na(HD)]
+  HD
+  HD[HD > 100] = 100 #max 100 dbh, otherwise no rbdat values
   
   if (length(HD) != 0){
-    
+    print("flag 2")
 
     tree <- list(spp = rep(1,length(HD)), D1 = HD, H = HH)
-    tree
+
     res <- buildTree(tree = tree)
     #getSpeciesCode(inSp = c("Bu", "Fi"))
     
@@ -192,27 +201,52 @@ for(fall in gridE){
     
     assortments = getAssortment(res)
     assortments[is.na(assortments)] <- 0
-    assortments["p"] =apply(assortments, 1, moneyMaker, output = 'profitpT')
+    assortments["p"] =apply(assortments, 1, moneyMaker, output = "profitpT")
+    
+    
     
     h_interval= 5
     start = 0
     profits <- numeric()
-  
-    
+    assortments
+    profits
+    assortments$p[(6):(10)]
+    sum(assortments$p, na.rm = TRUE)
     for (hyear in seq_along(thinAges)) {
-      harvestNo = out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
-      profits <- c(profits, harvestNo*sum(assortments[start+1:(start + h_interval),]$p, na.rm = TRUE))
+      harvestNo = out_yearly$Harvest_Stems[thinAges[hyear]-29] #out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
+      print(harvestNo)
+      profits <- c(profits, harvestNo*sum(assortments$p[(start+1):(start + h_interval)], na.rm = TRUE))
       start = start + h_interval
+ 
+
     }
+    
+    if (endHarvest){
+      print("flag 3")
+      lastHH =tail(out_yearly$Height, n=1)
+      lastHD = min(100, tail(out_yearly$avDBH, n=1))  #max 100 dbh, otherwise no rbdat values
+      lastTree <- list(spp = rep(1,length(lastHD)), D1 = lastHD, H = lastHH)
+      
+      lastRes <- buildTree(tree = lastTree)
+      #getSpeciesCode(inSp = c("Bu", "Fi"))
+      
+      
+      
+      lastAssortments = getAssortment(lastRes)
+      lastAssortments[is.na(lastAssortments)] <- 0
+      lastAssortments["p"] =apply(lastAssortments, 1, moneyMaker, output = "profitpT")
+      
+      profits <- c(profits, tail(out_yearly$StemNo, n=1)*sum(lastAssortments$p, na.rm = TRUE))
+    }
+    
     p_e <- c(p_e, sum(profits, na.rm = TRUE))
-    p_e
+
     
   } else {
     p_e <- c(p_e, 0)
   }
   
-  
-  
+
 }
 
 
@@ -221,8 +255,7 @@ deepP_E$return <- d
 watery_E$return <- w
 harvestVol_E$return <- h
 profits_E$return <- p_e
-
-standVol_E$return
+harvestStems$return <- h_
 
 
 
@@ -240,21 +273,28 @@ plot(gridE, harvestVol_E$return , type = "o", col = 1, main="Harvest Vol.")
 plot(gridE, profits_E$return/1000, type = "o", col = 1, main="Harvest profit Euro")
 
 plot(gridE, deepP_E$return*3.05*10/1000 ,  col = 2, main="Water profit Euro")
-deepP_E$return*3.05*10/1000
 
 
-assortments
-falls[1]
-getwd()
-assortments
-thinVals
-StemNoi - thinVals[hyear]
-thinVals
 
-assortments
-profits
+profits_E
 
-sum(profits)
 
-HH[1]
-thinVals
+lastHH = tail(out_yearly$Height, n=1)
+lastHD = min(100, tail(out_yearly$avDBH, n=1))
+lastTree <- list(spp = rep(1,length(lastHD)), D1 = lastHD, H = lastHH)
+
+lastRes <- buildTree(tree = lastTree)
+#getSpeciesCode(inSp = c("Bu", "Fi"))
+
+lastHD
+
+lastAssortments = getAssortment(lastRes)
+lastAssortments[is.na(lastAssortments)] <- 0
+lastAssortments["p"] =apply(lastAssortments, 1, moneyMaker, output = "profitpT")
+
+ tail(out_yearly$StemNo, n=1)*sum(lastAssortments$p, na.rm = TRUE)
+
+ lastAssortments
+ 
+ lastHH
+ lastHD

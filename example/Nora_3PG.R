@@ -330,30 +330,15 @@ for (r in discount_rates){
  
  m <- matrix(c(1,2,3,4,5,5),nrow = 3,ncol = 2,byrow = TRUE)
  
- layout(mat = m,heights = c(0.4,0.4,0.2))
+ layout(mat = m,heights = c(0.5,0.5,0.2))
  
- par(mar = c(2,2,1,1))
+ par(mar = c(4,4,2,2))
      
- plot(gridE, npv_harvest_E$X1/1000, type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
-      ylab = "NPV Timber Harvest") 
+ plot(gridE, npv_harvest_E$X1/1000, main= "Timber Harvest", type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
+      ylab = "NPV [1000€]") 
  lines(gridE,npv_harvest_E$X2/1000, type = "o", col = 2)
  lines(gridE,npv_harvest_E$X3/1000, type = "o", col = 3) 
 
- plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-
- legend(x = "top",
-        inset = 0, # You will need to fine-tune the
-        # first value depending on the windows size
-        legend = c("0% discount rate", "5%", "10%"), 
-        lty = c(1, 1,1),
-        col = c(1, 2, 3),
-        lwd=5, 
-        cex=.5,
-        xpd = TRUE,   # You need to specify this to add
-        # the legend to put the legend outside the plot
-        horiz = TRUE)
- par(xpd = TRUE)
- 
  ###NPV Harvest endharvest
 
  
@@ -372,12 +357,12 @@ for (r in discount_rates){
  }
  npv_harvest_E_
 
- plot(gridE, npv_harvest_E_$X1/1000, type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
-      ylab = "NPV Timber Harvest with end harvest [1000€]") 
+ plot(gridE, npv_harvest_E_$X1/1000, main= "Timber Harvest with end harvest", type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
+      ylab = "NPV [1000€]") 
  lines(gridE,npv_harvest_E_$X2/1000, type = "o", col = 2)
  lines(gridE,npv_harvest_E_$X3/1000, type = "o", col = 3) 
- lines(gridE,npv_harvest_E$X2/1000, type = "o", col = 4)
- lines(gridE,npv_harvest_E$X3/1000, type = "o", col = 5) 
+ #lines(gridE,npv_harvest_E$X2/1000, type = "o", col = 4)
+ #lines(gridE,npv_harvest_E$X3/1000, type = "o", col = 5) 
  
  
  ###NPV water
@@ -395,19 +380,38 @@ for (r in discount_rates){
    npv_water_E[idx] = npv
  }
 
- plot(gridE, npv_water_E$X1, type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
-      ylab = "NPV Water Yield [1000€]")  
+ plot(gridE, npv_water_E$X1, type = "o", main="Water Yield", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
+      ylab = "NPV [1000€]")  
  lines(gridE,npv_water_E$X2, type = "o", col = 2)
  lines(gridE,npv_water_E$X3, type = "o", col = 3) 
  
  
- plot(gridE, npv_harvest_E$X1/1000+ npv_water_E$X1, type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
-      ylab = "NPV Profits [1000€]")  
+ plot(gridE, npv_harvest_E$X1/1000+ npv_water_E$X1, main="Total Profits", type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
+      ylab = "NPV [1000€]")  
  lines(gridE,npv_harvest_E$X2/1000+ npv_water_E$X2, type = "o", col = 2)
  lines(gridE,npv_harvest_E$X3/1000+ npv_water_E$X3, type = "o", col = 3) 
 
- plot(gridE, npv_harvest_E_$X1/1000+ npv_water_E$X1, type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
-      ylab = "NPV Profits with end harvest [1000€]")  
+ plot(gridE, npv_harvest_E_$X1/1000+ npv_water_E$X1, main="Total Profits with end harvest", type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
+      ylab = "NPV [1000€]")  
+ lines(gridE,npv_harvest_E_$X2/1000+ npv_water_E$X2, type = "o", col = 2)
+ lines(gridE,npv_harvest_E_$X3/1000+ npv_water_E$X3, type = "o", col = 3) 
+ plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+ 
+ legend(x = "top",
+        inset = 0, # You will need to fine-tune the
+        # first value depending on the windows size
+        legend = c("0% discount rate", "5%", "10%"), 
+        lty = c(1, 1,1),
+        col = c(1, 2, 3),
+        lwd=5, 
+        cex=1.7,
+        xpd = TRUE,   # You need to specify this to add
+        # the legend to put the legend outside the plot
+        horiz = TRUE)
+
+ 
+ plot(gridE, npv_harvest_E_$X1/1000+ npv_water_E$X1, main="Total Profits with end harvest", type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
+      ylab = "NPV [1000€]")  
  lines(gridE,npv_harvest_E_$X2/1000+ npv_water_E$X2, type = "o", col = 2)
  lines(gridE,npv_harvest_E_$X3/1000+ npv_water_E$X3, type = "o", col = 3) 
  

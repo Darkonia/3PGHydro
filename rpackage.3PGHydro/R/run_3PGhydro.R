@@ -21,7 +21,8 @@
 #' @param RocksER share of rocks/skeleton in effective root zone (0-1) 0:none, 1:all
 #' @param RocksDR share of rocks/skeleton in deep root zone (0-1) 0:none, 1:all
 #' @param thinAges ages at which thinning should be applied, in case of no thinning: NULL
-#' @param thinVals number of stems left after thinning, in case of no thinning: NULL
+#' @param thinVals number of stems left after thinning or % of tsems thinned [0-1], in case of no thinning: NULL
+#' @param thinVals1 number of stems left after thinning or % of tsems thinned [0-1], in case of no thinning: NULL  //player 2
 #' @param thinWF thinning regime foliage below to above (0.5 - 1.5), in case of no thinning: NULL
 #' @param thinWR thinning regime foliage below to above (0.5 - 1.5), in case of no thinning: NULL
 #' @param thinWS thinning regime foliage below to above (0.5 - 1.5), in case of no thinning: NULL
@@ -56,7 +57,7 @@
 #' OutputRes <- "daily"
 #' out <- run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS)
 #' @export
-run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS,OutputRes){
+run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals, thinVals1,thinWF,thinWR,thinWS,OutputRes){
   
   ############################################################
   #parameters from sheet 'p'
@@ -147,6 +148,11 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
   Q10 <- 2 #Q10 for heterotrophic respiration
   Csoil <- 40 #soil carbon content (tons/ha)
   poolFractn <- 0
+
+
+
+
+
   ############################################################
   #Yearly CO2 values from 1850 - 2300
   #############################################################
@@ -192,18 +198,23 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
   StandVol_loss <- 0
   WSselfThin <- 0
   WSMort <- 0
-  accV <- 0
   #Initial growing degree day sums 
   GDDS <- 0
   #StandVol_ext_single <- 0
   
+  #for 2 player management
+
+
+
+  st_0i = StemNoi/2 #st_0
+  st_1i = StemNoi/2 #st_1
+  
+
   #Assign Soil Parameters and 3PG original SWconstant and SWpower as function of Soil Class
   #Soil Class: 1 = sand, 2 = sandy loam, 3 = clay loam, 4 = clay
   if (SoilClass > 0) {
     #3PG Hydro Soil Class Parameters
     if (SoilClass == 1){
-      SWconst	<- 0.8 #3PG Original
-      SWpower	<- 12 #3PG Original
       volRes <- 0.02 #vol. residual water content
       volSat <- 0.38 #vol. saturation water content
       VGn <- 1.55 #Van-Genuchten n
@@ -213,8 +224,6 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
       maxInf <- 30 #maximum rainfall infiltration (mm/day)
     }
     if (SoilClass == 2){
-      SWconst	<- 0.7
-      SWpower	<- 9
       volRes <- 0.08
       volSat <- 0.4
       VGn <- 1.35
@@ -224,8 +233,6 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
       maxInf <- 25
     }
     if (SoilClass == 3){
-      SWconst	<- 0.5
-      SWpower	<- 5
       volRes <- 0.1
       volSat <- 0.44
       VGn <- 1.25
@@ -235,8 +242,6 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
       maxInf <- 20
     }
     if (SoilClass == 4){
-      SWconst	<- 4
-      SWpower	<- 0.4
       volRes <- 0.12
       volSat <- 0.5
       VGn <- 1.1
@@ -246,6 +251,11 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
       maxInf <- 15
     }
   }
+ 
+  #SWpower & SWconst -> now used for drought tolerance Original: SWconst (0.8, 0.7, 0.5, 0.4), SWpower (12, 9, 5, 4)
+  SWconst	<- 0.5
+  SWpower	<- 5
+  
   #Soil Depth
   depthER <- EffectiveRootZoneDepth
   depthDR <- DeepRootZoneDepth
@@ -354,14 +364,15 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
   if(SVEquation==1) StandVol <- WS * (1 - fracBB) / Density #3PG original equation
   if(SVEquation==2) StandVol <- aV * (avDBH ^ nVB) * (Height ^ nVH) * StemNo #equation with parameters after Forrester et al. 2021
   oldV <- StandVol
+  accV <- StandVol
   
   #Write first line of output (= Start conditions)
-  out <- as.data.frame(matrix(data=NA,nrow=Duration,ncol=28))
+  out <- as.data.frame(matrix(data=NA,nrow=Duration,ncol=34))
   colnames(out) <- c("Date","Year","StandAge","StemNo","WF","WR","WS","avDBH","Height","StandVol",
                      "LAI", "volWCer","ASWer","volWCdr","ASWdr",
                      "VolProduction_tot","BasalArea","GPP","NPP","NEE",
                      "Evapotranspiration","DeepPercolation","RunOff",
-                     "Harvest_WS","Harvest_DBH","Harvest_Height","Harvest_Vol","StandVol_loss")
+                     "Harvest_Stems","Harvest_WS","Harvest_DBH","Harvest_Height","Harvest_Vol","StandVol_loss","mortality_stems", "hst_0", "hst_1", "st_0", "st_1")
   out[1,1] <- as.character(date)
   out[1,2:15] <- as.numeric(c(year,StandAge,StemNo,WF,WR,WS,avDBH,Height,StandVol,LAI,volWer,erASW,volWdr,drASW))
   
@@ -372,6 +383,7 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
   ###########################################################
   #Model loop: daily timesteps
   ###########################################################
+
   for (day in 2:Duration){
     
     #next day of date
@@ -393,7 +405,7 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
     #VPD is the difference (deficit) between the amount of moisture in the air and how much moisture the air can hold when it is saturated. 
     VPDx <- 6.1078 * exp(17.269 * climate$Tmax[day] / (237.3 + climate$Tmax[day]))
     VPDn <-  6.1078 * exp(17.269 * climate$Tmin[day] / (237.3 + climate$Tmin[day]))
-    VPD <-  (VPDx + VPDn) / 2 #mean day-time VPD (vapour pressure deficit)
+    VPD <- (VPDx + VPDn) / 2 #mean day-time VPD (vapour pressure deficit)
     
     #DayLength
     #gets fraction of day when sun is "up"
@@ -741,26 +753,26 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
     Harvest_Height <-  0
     Harvest_Vol <- 0
     StandVol_loss <- 0
+    Harvest_Stems <- 0
+    mortality_stems <- 0
+    st_0 <-0
+    st_1 <-0
+    hst_0 <-0
+    hst_1 <-0
+
+
 
     
     #Bark beetle attack, Thinning & Mortality: At the end of each month
-    if(MonthOneDayBefore!=currentMonth){     
-      #Bark Beetle Attack, from Meyer et al. (2017) (could think to start it in april/may)
-      if(StandAge >= attackAge & attackAge > 0){
-        gammaNattack <- gammaN0attack * exp(-((StandAge - attackAge) * 12)/attackTime)
-        delStems <- gammaNattack * StemNo / 100
-        WF <- WF - mF * delStems * (WF / StemNo)
-        WR <- WR - mR * delStems * (WR / StemNo)
-        WS<- WS - mS * delStems * (WS / StemNo)
-        StemNo <- StemNo - delStems
-        mortality <- mortality + delStems
-      }
-      
+    if(StemNo > 0){
+    #
+    if(MonthOneDayBefore!=currentMonth){         
       #Perform any thinning events: performed at the beginning of the year
       nThin <- as.numeric(length(thinAges))
       if (thinEventNo <= nThin)  {
         if (StandAge >= thinAges[thinEventNo]) {
-          if (StemNo > thinVals[thinEventNo]) { 
+          if(thinVals[thinEventNo]>1){ #thinning with numbers of trees left in stand
+            if (StemNo > thinVals[thinEventNo]) { 
             delN <- (StemNo - thinVals[thinEventNo]) / StemNo
             Harvest_Stems <- StemNo * delN
             StemNo <- StemNo * (1 - delN)
@@ -776,14 +788,104 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
             if(HeightEquation==2) Harvest_Height <- 1.3 + aH * exp(-nHB/Harvest_DBH) + nHC * Density * Harvest_DBH #Michajlow-Schumacher (Forrester et. al, 2021)
             if(SVEquation==1) Harvest_Vol <- Harvest_WS * (1 - fracBB) / Density #3PG original equation
             if(SVEquation==2) Harvest_Vol <- aV * (Harvest_DBH ^ nVB) * (Harvest_Height ^ nVH) * Harvest_Stems #equation with parameters after Forrester et al. 2021
-          }
+            #check for too high dbh
+            AvStemMass <- WS * 1000 / StemNo
+            avDBH <- (AvStemMass / aWs) ^ (1 / nWs)
+            if(avDBH > 100){print("dbh too high")}
+            }
+            }
+            if(thinVals[thinEventNo]<=1){ #thinning with percentage of trees taken out
+              if(!is.null(thinVals1)){
+                st_0 <- st_0i
+                st_1 <- st_1i
+                
+                d = (st_0 + st_1) - round(StemNo) 
+                d_0 = round(d*st_0/(st_0 + st_1))   # number of dead trees of Player 0
+                st_0 <- st_0 - d_0
+                st_1 <- st_1 - d + d_0
+
+                if(st_0 <= 1){
+                  thinVals[thinEventNo] = 0
+                }
+                if(st_1 <= 1){
+                  thinVals1[thinEventNo] = 0
+                }
+            
+                print("EMERGENCYLKAFJLASKDFJLKSDFLKASJFLKASFDLK")
+                print(st_0)
+                print(st_1)
+                Harvest_Stems <- round(st_0*thinVals[thinEventNo] ) + round(st_1*thinVals1[thinEventNo] )
+                                print("H")
+                print(Harvest_Stems)
+                hst_0 <- round(st_0*thinVals[thinEventNo] )
+                hst_1 <- round(st_1*thinVals1[thinEventNo] )
+
+
+                st_0 <- round(st_0 - st_0*thinVals[thinEventNo] )
+                st_1 <- round(st_1 - st_1*thinVals1[thinEventNo] )
+                st_0i <- st_0
+                st_1i <- st_1
+              }
+
+            
+            delN <- Harvest_Stems/StemNo
+            StemNo <- StemNo - Harvest_Stems
+            WF <- WF * (1 - delN * thinWF[thinEventNo])
+            if(GDDcount>0){ WFprior <- WFprior * (1 - delN * thinWF[thinEventNo])}
+            WR <- WR * (1 - delN * thinWR[thinEventNo])
+            WSext <- WS * delN * thinWS[thinEventNo]
+            WS <- WS * (1 - delN * thinWS[thinEventNo])
+            #Harvest Info: WS, Vol, DBH, Height
+            Harvest_WS <- WSext
+            Harvest_DBH <- ((Harvest_WS*1000/Harvest_Stems) / aWs) ^ (1 / nWs)
+            if(HeightEquation==1) Harvest_Height <-  aH * Harvest_DBH ^ nHB * StemNo ^ nHC
+            if(HeightEquation==2) Harvest_Height <- 1.3 + aH * exp(-nHB/Harvest_DBH) + nHC * Density * Harvest_DBH #Michajlow-Schumacher (Forrester et. al, 2021)
+            if(SVEquation==1) Harvest_Vol <- Harvest_WS * (1 - fracBB) / Density #3PG original equation
+            if(SVEquation==2) Harvest_Vol <- aV * (Harvest_DBH ^ nVB) * (Harvest_Height ^ nVH) * Harvest_Stems #equation with parameters after Forrester et al. 2021
+            #check for too high dbh
+            AvStemMass <- WS * 1000 / StemNo
+            avDBH <- (AvStemMass / aWs) ^ (1 / nWs)
+            if(avDBH > 100){print("dbh too high")}
+            }
+            # if(thinVals[thinEventNo]<=1){ #thinning with percentage of trees taken out
+              
+            # Harvest_Stems <- round(StemNo*thinVals[thinEventNo],0)
+            # delN <- Harvest_Stems/StemNo
+            # StemNo <- StemNo - Harvest_Stems
+            # WF <- WF * (1 - delN * thinWF[thinEventNo])
+            # if(GDDcount>0){ WFprior <- WFprior * (1 - delN * thinWF[thinEventNo])}
+            # WR <- WR * (1 - delN * thinWR[thinEventNo])
+            # WSext <- WS * delN * thinWS[thinEventNo]
+            # WS <- WS * (1 - delN * thinWS[thinEventNo])
+            # #Harvest Info: WS, Vol, DBH, Height
+            # Harvest_WS <- WSext
+            # Harvest_DBH <- ((Harvest_WS*1000/Harvest_Stems) / aWs) ^ (1 / nWs)
+            # if(HeightEquation==1) Harvest_Height <-  aH * Harvest_DBH ^ nHB * StemNo ^ nHC
+            # if(HeightEquation==2) Harvest_Height <- 1.3 + aH * exp(-nHB/Harvest_DBH) + nHC * Density * Harvest_DBH #Michajlow-Schumacher (Forrester et. al, 2021)
+            # if(SVEquation==1) Harvest_Vol <- Harvest_WS * (1 - fracBB) / Density #3PG original equation
+            # if(SVEquation==2) Harvest_Vol <- aV * (Harvest_DBH ^ nVB) * (Harvest_Height ^ nVH) * Harvest_Stems #equation with parameters after Forrester et al. 2021
+            # #check for too high dbh
+            # AvStemMass <- WS * 1000 / StemNo
+            # avDBH <- (AvStemMass / aWs) ^ (1 / nWs)
+            # if(avDBH > 100){print("dbh too high")}
+            # }
           thinEventNo <- thinEventNo + 1
         }
       }
-      
+      #Bark Beetle Attack, from Meyer et al. (2017) (could think to start it in april/may)
+      mortality_stems <- 0
+      if(StandAge >= attackAge & attackAge > 0){
+        gammaNattack <- gammaN0attack * exp(-((StandAge - attackAge) * 12)/attackTime)
+        delStems <- gammaNattack * StemNo / 100
+        WF <- WF - mF * delStems * (WF / StemNo)
+        WR <- WR - mR * delStems * (WR / StemNo)
+        WS<- WS - mS * delStems * (WS / StemNo)
+        StemNo <- StemNo - delStems
+        mortality_stems <- mortality_stems + delStems
+      }
+        
       #Calculate age and stress-related mortality
       delStems <- 0
-      mortality <- 0
       WSMort <- 0
       if (tgammaN != 0) {
         gammaN <- gammaN1 + (gammaN0 - gammaN1)*exp(-log(2)*(StandAge/tgammaN)^ngammaN)
@@ -798,11 +900,10 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
         WSmort <- mS * delStems * (WS / StemNo)
         WS <- WS - mS * delStems * (WS / StemNo)
         StemNo <- StemNo - delStems
-        mortality <- mortality + delStems
+        mortality_stems <- mortality_stems + delStems
       }
       
       #Calculate self-thinning mortality
-      selfThin <- 0
       WSselfThin <- 0
       wSmax <- wSx1000 * (1000 / StemNo) ^ thinPower #(1000 / StemNo) ^ thinPower can be seen as a factor/ empirical relationship determining how soon selfthinnning starts
       AvStemMass <- WS * 1000 / StemNo #transform Ws into kg/tree
@@ -829,10 +930,10 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
         StemNo <- StemNo - delStems
         wSmax <- wSx1000 * (1000 / StemNo) ^ thinPower
         AvStemMass <- WS * 1000 / StemNo
-        selfThin <- selfThin + delStems
+        mortality_stems <- mortality_stems + delStems
       }
-    }
-    
+         }    
+  
     ##################################################################
     #update age dependent factors
     #SLA = expF(StandAge, SLA0, SLA1, tSLA, 2)
@@ -881,18 +982,19 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
     
     #MAI
     #MAI <- (StandVol + StandVol_ext)/StandAge
-    
+    }
     #WF in kg per tree
     #WFtree <- WF *1000 /StemNo
     out[day,1] <- as.character(date)
-    out[day,2:27] <- as.numeric(c(year,StandAge,StemNo,WF,WR,WS,avDBH,Height,StandVol,LAI,volWer,erASW,volWdr,drASW,VolProduction_tot,
-                                  BasArea,GPP,NPP,NEE,EvapTransp,DP,RunOff,Harvest_WS,Harvest_DBH,Harvest_Height,Harvest_Vol,StandVol_loss)) 
+    out[day,2:34] <- as.numeric(c(year,StandAge,StemNo,WF,WR,WS,avDBH,Height,StandVol,LAI,volWer,erASW,volWdr,drASW,VolProduction_tot,
+                                  BasArea,GPP,NPP,NEE,EvapTransp,DP,RunOff,Harvest_Stems,Harvest_WS,Harvest_DBH,Harvest_Height,Harvest_Vol,StandVol_loss,mortality_stems,hst_0, hst_1, st_0,st_1)) 
   }
   
   ###########################################################
   #Create Final output data
   ###########################################################
   out$Date <- as.Date(out$Date,format="%Y-%m-%d")
+  print(out)
   if(OutputRes == "yearly"){
     #Aggregation to yearly values
     #End of the year values:
@@ -910,7 +1012,7 @@ run_3PGhydro <- function(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,St
                       avDBH=endYear$avDBH,Height=endYear$Height,StandVol=endYear$StandVol,LAI=mean$LAI,volWCer=mean$volWCer,ASWer=mean$ASWer,volWCdr=mean$volWCdr,ASWdr=mean$ASWdr,
                       VolProduction_tot=endYear$VolProduction_tot,BasalArea=endYear$BasalArea,GPP=sum$GPP,NPP=sum$NPP,NEE=sum$NEE, 
                       Evapotranspiration=sum$Evapotranspiration,DeepPercolation=sum$DeepPercolation,RunOff=sum$RunOff,
-                      Harvest_WS=sum$Harvest_WS,Harvest_DBH=sum$Harvest_DBH,Harvest_Height=sum$Harvest_Height,Harvest_Vol=sum$Harvest_Vol,StandVol_loss=sum$StandVol_loss)
+                      Harvest_Stems=sum$Harvest_Stems,Harvest_WS=sum$Harvest_WS,Harvest_DBH=sum$Harvest_DBH,Harvest_Height=sum$Harvest_Height,Harvest_Vol=sum$Harvest_Vol,StandVol_loss=sum$StandVol_loss,mortality_stems=sum$mortality_stems, hst_0=sum$hst_0, hst_1=sum$hst_1, st_0=sum$st_0,st_1=sum$st_1)
   }
   return(out)
 }

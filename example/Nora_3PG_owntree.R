@@ -134,7 +134,7 @@ discount_rates <- c(0,5,10)
 
 #Yearly Output
 OutputRes <- "yearly"
-gridE <- seq(0.01,0.61, by=0.31)
+gridE <- seq(0.01,0.61, by=0.7)
 gridE
 years <- c(30,40,50,60)
  
@@ -159,19 +159,21 @@ d <- numeric()
 w <- numeric()
 h <- numeric()
 h_ <- numeric()
+h1 <- numeric()
+h1_ <- numeric()
 stV <- numeric()
 p_e <- numeric()
 
 
 
 idx = 0
-for (fall in gridE){
+for (fall in gridE){ 
   idx = idx + 1
   
   #Management
   thinAges <- c(35,40,45,50,55,60,65,70,75,80)
   thinVals <- rep(fall,   length(thinAges))#ceiling(c(StemNoi*(1-fall),StemNoi*(1-fall)^2,StemNoi*(1-fall)^3,StemNoi*(1-fall)^4,StemNoi*(1-fall)^5,StemNoi*(1-fall)^6,StemNoi*(1-fall)^7,StemNoi*(1-fall)^8,StemNoi*(1-fall)^9,StemNoi*(1-fall)^10))
-  thinVals1 <- NULL #rep(fall,   length(thinAges))
+  thinVals1 <- rep(fall,   length(thinAges))
   thinWF <- rep(1,  length(thinAges))
   thinWR <- rep(1,  length(thinAges))
   thinWS <- rep(1,  length(thinAges))
@@ -181,10 +183,16 @@ for (fall in gridE){
   print("flag 1")
   deepP_E[idx] = out_yearly$DeepPercolation
   watery_E[idx]<- out_yearly$DeepPercolation + out_yearly$RunOff
-  h_ <-c(h, sum(out_yearly$Harvest_Vol + tail(out_yearly$StandVol, n=1), na.rm = TRUE) )
-  h <- c(h, sum(out_yearly$Harvest_Vol, na.rm = TRUE) )
-
-
+  # h_ <-c(h, sum(out_yearly$Harvest_Vol + tail(out_yearly$StandVol, n=1), na.rm = TRUE) )
+  # h <- c(h_, sum(out_yearly$Harvest_Vol, na.rm = TRUE) )
+  
+  
+  h <-c(h, sum(out_yearly$hst_0, na.rm = TRUE) )
+  h1 <-c(h, sum(out_yearly$hst_1 , na.rm = TRUE) )
+  h_ <-c(h, sum(out_yearly$hst_0 + tail(out_yearly$st_0, n=1), na.rm = TRUE) )
+  h1_ <-c(h, sum(out_yearly$hst_1 + tail(out_yearly$st_1, n=1), na.rm = TRUE) )
+  
+  
   stV <- c(stV,out_yearly$StandVol[[EndAge - StandAgei ]])
   
   
@@ -224,10 +232,7 @@ for (fall in gridE){
     h_interval= 5
     start = 0
     profits <- numeric()
-    assortments
-    profits
-    assortments$p[(6):(10)]
-    sum(assortments$p, na.rm = TRUE)
+
     for (hyear in seq_along(thinAges)) {
       harvestNo = out_yearly$Harvest_Stems[thinAges[hyear]-29] #out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
       print(harvestNo)
@@ -259,6 +264,88 @@ for (fall in gridE){
   
   profits_E_[idx] <-  profits
 
+  
+  #Estimate harvest value:
+  HH =out_yearly$Harvest_Height
+  HD = out_yearly$Harvest_DBH
+  #extract harvest years
+  HH = HH[thinAges-29]
+  HD = HD[thinAges-29]
+  #ignore years with 0 harvest
+  HH = HH[!HH == 0][ !is.na(HH)]
+  HD = HD[!HD == 0][ !is.na(HD)]
+  HD
+  HD[HD > 100] = 100 #max 100 dbh, otherwise no rbdat values
+  
+  if (length(HD) != 0){
+    print("flag 2")
+    
+    tree <- list(spp = rep(1,length(HD)), D1 = HD, H = HH)
+    
+    res <- buildTree(tree = tree)
+    #getSpeciesCode(inSp = c("Bu", "Fi"))
+    
+    
+    
+    
+    
+    
+    assortments = getAssortment(res)
+    assortments[is.na(assortments)] <- 0
+    assortments["p"] =apply(assortments, 1, moneyMaker, output = "profitpT")
+    
+    
+    
+    h_interval= 5
+    start = 0
+    profits0 <- numeric()
+    profits1 <- numeric()
+    
+    for (hyear in seq_along(thinAges)) {
+      harvestNo = out_yearly$hst_0[thinAges[hyear]-29] #out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
+      print(harvestNo)
+      profits0 <- c(profits, harvestNo*sum(assortments$p[(start+1):(start + h_interval)], na.rm = TRUE))
+      start = start + h_interval
+      
+      
+    }
+    profits_E0[idx] <-   profits0
+    
+    for (hyear in seq_along(thinAges)) {
+      harvestNo = out_yearly$hst_1[thinAges[hyear]-29] #out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
+      print(harvestNo)
+      profits1 <- c(profits, harvestNo*sum(assortments$p[(start+1):(start + h_interval)], na.rm = TRUE))
+      start = start + h_interval
+      
+      
+    }
+    profits_E1[idx] <-   profits1
+  }
+  
+  
+  ###Harvest end valuation
+
+  lastHH =tail(out_yearly$Height, n=1)
+  lastHD = min(100, tail(out_yearly$avDBH, n=1))  #max 100 dbh, otherwise no rbdat values
+  lastTree <- list(spp = rep(1,length(lastHD)), D1 = lastHD, H = lastHH)
+  
+  lastRes <- buildTree(tree = lastTree)
+  #getSpeciesCode(inSp = c("Bu", "Fi"))
+  
+  
+  
+  lastAssortments = getAssortment(lastRes)
+  lastAssortments[is.na(lastAssortments)] <- 0
+  lastAssortments["p"] =apply(lastAssortments, 1, moneyMaker, output = "profitpT")
+  
+  
+  profits0[length(thinAges)] =  profits0[length(thinAges)] + tail(out_yearly$st_0, n=1)*sum(lastAssortments$p, na.rm = TRUE)
+
+  profits_E0_[idx] <-  profits0
+  
+  profits1[length(thinAges)] =  profits1[length(thinAges)] + tail(out_yearly$st_1, n=1)*sum(lastAssortments$p, na.rm = TRUE)
+  
+  profits_E1_[idx] <-  profits1
 
 
 }
@@ -450,6 +537,5 @@ for (r in discount_rates){
  # fit = lm(unlist(npv_harvest_E$X2) ~ poly(gridE, 2, raw=TRUE) ) 
  # fit
  # plot(gridE, fit2degree(gridE,fit), type = "o", col = 1,)# ylim=c(0,1000)) 
- 
- 
-round(0.4)
+
+fall

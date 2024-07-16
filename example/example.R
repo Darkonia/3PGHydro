@@ -1,9 +1,11 @@
-#library(devtools)
-#install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
+
+library(devtools)
+install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
 library(rpackage.3PGHydro)
 ?run_3PGhydro
 #
-setwd("YOURPATH")
+
+setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro/example")
 
 #climate data
 climate <- read.csv("climate.csv")
@@ -12,17 +14,18 @@ climate$date <- as.Date(climate$date,format="%d/%m/%Y")
 #load 3PG parameters
 Parameter <- read.csv("parameter.csv") #P.abies from Forrester et al. 2021; F. sylvatica from Augustynczik et al 2017
 #select species
-p <- Parameter$Fagus.sylvatica
+#p <- Parameter$Fagus.sylvatica
+p <- Parameter$Picea.abies
 
 #Site & Stand characteristics
 lat <- 47.5
 StartDate <- "01/01/1960"
-StandAgei <- 30
-EndAge <- 80
-StemNoi <- 600
-WSi <- 135
-WFi <- 8
-WRi <- 15
+StandAgei <- 1
+EndAge <- 40
+StemNoi <- 1000
+WSi <- 10
+WFi <- 1
+WRi <- 1
 CO2Concentration <- "Historical"
 FR <- 0.5
 HeightEquation <- 1 
@@ -36,7 +39,8 @@ RocksDR <- 0.4
 
 #Management
 thinAges <- NULL #c(30,40,50,60)
-thinVals <- NULL #c(450,400,350,300)
+thinVals <- NULL #c(450,400,250,200)
+#thinVals <- c(0.75,400,350,300)
 thinWF <- NULL #c(1,1,1,1)
 thinWR <- NULL #c(1,1,1,1)
 thinWS <- NULL #c(1,1,1,1)

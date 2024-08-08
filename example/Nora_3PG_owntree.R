@@ -1,7 +1,14 @@
 library(devtools)
 library(rBDAT)
+library(decisionSupport)
+library('decisionSupport')
 #install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
 #library(rpackage.3PGHydro)
+
+if(!require('decisionSupport')) {
+  install.packages('decisionSupport')
+  library('decisionSupport')
+}
 
 load_all("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro/rpackage.3PGHydro/")
 ?run_3PGhydro
@@ -14,10 +21,7 @@ getwd()
 setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
 
 
-if(!require('decisionSupport')) {
-  install.packages('decisionSupport')
-  library('decisionSupport')
-}
+
 
 
 
@@ -134,8 +138,8 @@ discount_rates <- c(0,5,10)
 
 #Yearly Output
 OutputRes <- "yearly"
-gridE <- seq(0.01,0.61, by=0.7)
-gridE
+gridE <- seq(0.01,0.31, by=0.1)
+
 years <- c(30,40,50,60)
  
 
@@ -148,6 +152,12 @@ colnames(harvestVol_E) <- c("return")
 harvestVol_E_ <- harvestVol_E
 profits_E <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
 profits_E_ <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
+
+profits_E0 <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
+profits_E0_ <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
+
+profits_E1 <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
+profits_E1_ <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
 #standVol_E <- deepP_E
 #harvestStems <- deepP_E
 
@@ -265,34 +275,34 @@ for (fall in gridE){
   profits_E_[idx] <-  profits
 
   
-  #Estimate harvest value:
-  HH =out_yearly$Harvest_Height
-  HD = out_yearly$Harvest_DBH
-  #extract harvest years
-  HH = HH[thinAges-29]
-  HD = HD[thinAges-29]
-  #ignore years with 0 harvest
-  HH = HH[!HH == 0][ !is.na(HH)]
-  HD = HD[!HD == 0][ !is.na(HD)]
-  HD
-  HD[HD > 100] = 100 #max 100 dbh, otherwise no rbdat values
-  
-  if (length(HD) != 0){
-    print("flag 2")
-    
-    tree <- list(spp = rep(1,length(HD)), D1 = HD, H = HH)
-    
-    res <- buildTree(tree = tree)
-    #getSpeciesCode(inSp = c("Bu", "Fi"))
-    
-    
-    
+  # #Estimate harvest value:
+  # HH =out_yearly$Harvest_Height
+  # HD = out_yearly$Harvest_DBH
+  # #extract harvest years
+  # HH = HH[thinAges-29]
+  # HD = HD[thinAges-29]
+  # #ignore years with 0 harvest
+  # HH = HH[!HH == 0][ !is.na(HH)]
+  # HD = HD[!HD == 0][ !is.na(HD)]
+  # HD
+  # HD[HD > 100] = 100 #max 100 dbh, otherwise no rbdat values
+  # 
+   if (length(HD) != 0){
+  #   print("flag 2")
+  #   
+  #   tree <- list(spp = rep(1,length(HD)), D1 = HD, H = HH)
+  #   
+  #   res <- buildTree(tree = tree)
+  #   #getSpeciesCode(inSp = c("Bu", "Fi"))
+  #   
     
     
     
-    assortments = getAssortment(res)
-    assortments[is.na(assortments)] <- 0
-    assortments["p"] =apply(assortments, 1, moneyMaker, output = "profitpT")
+    
+    
+    # assortments = getAssortment(res)
+    # assortments[is.na(assortments)] <- 0
+    # assortments["p"] =apply(assortments, 1, moneyMaker, output = "profitpT")
     
     
     
@@ -304,50 +314,52 @@ for (fall in gridE){
     for (hyear in seq_along(thinAges)) {
       harvestNo = out_yearly$hst_0[thinAges[hyear]-29] #out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
       print(harvestNo)
-      profits0 <- c(profits, harvestNo*sum(assortments$p[(start+1):(start + h_interval)], na.rm = TRUE))
+      profits0 <- c(profits0, harvestNo*sum(assortments$p[(start+1):(start + h_interval)], na.rm = TRUE))
       start = start + h_interval
       
       
     }
     profits_E0[idx] <-   profits0
     
+    
+    start = 0
     for (hyear in seq_along(thinAges)) {
       harvestNo = out_yearly$hst_1[thinAges[hyear]-29] #out_yearly$StemNo[thinAges[hyear]-30] - thinVals[hyear]
       print(harvestNo)
-      profits1 <- c(profits, harvestNo*sum(assortments$p[(start+1):(start + h_interval)], na.rm = TRUE))
+      profits1 <- c(profits1, harvestNo*sum(assortments$p[(start+1):(start + h_interval)], na.rm = TRUE))
       start = start + h_interval
       
       
     }
+    out_yearly$hst_0
     profits_E1[idx] <-   profits1
   }
   
   
   ###Harvest end valuation
+# 
+#   lastHH =tail(out_yearly$Height, n=1)
+#   lastHD = min(100, tail(out_yearly$avDBH, n=1))  #max 100 dbh, otherwise no rbdat values
+#   lastTree <- list(spp = rep(1,length(lastHD)), D1 = lastHD, H = lastHH)
+#   
+#   lastRes <- buildTree(tree = lastTree)
+#   #getSpeciesCode(inSp = c("Bu", "Fi"))
+#   
+#   
+#   
+#   lastAssortments = getAssortment(lastRes)
+#   lastAssortments[is.na(lastAssortments)] <- 0
+#   lastAssortments["p"] =apply(lastAssortments, 1, moneyMaker, output = "profitpT")
 
-  lastHH =tail(out_yearly$Height, n=1)
-  lastHD = min(100, tail(out_yearly$avDBH, n=1))  #max 100 dbh, otherwise no rbdat values
-  lastTree <- list(spp = rep(1,length(lastHD)), D1 = lastHD, H = lastHH)
-  
-  lastRes <- buildTree(tree = lastTree)
-  #getSpeciesCode(inSp = c("Bu", "Fi"))
-  
-  
-  
-  lastAssortments = getAssortment(lastRes)
-  lastAssortments[is.na(lastAssortments)] <- 0
-  lastAssortments["p"] =apply(lastAssortments, 1, moneyMaker, output = "profitpT")
-  
   
   profits0[length(thinAges)] =  profits0[length(thinAges)] + tail(out_yearly$st_0, n=1)*sum(lastAssortments$p, na.rm = TRUE)
-
+ 
   profits_E0_[idx] <-  profits0
   
   profits1[length(thinAges)] =  profits1[length(thinAges)] + tail(out_yearly$st_1, n=1)*sum(lastAssortments$p, na.rm = TRUE)
   
   profits_E1_[idx] <-  profits1
-
-
+ 
 }
 
 
@@ -424,7 +436,7 @@ for (r in discount_rates){
  par(mar = c(4,4,2,2))
      
  plot(gridE, npv_harvest_E$X1/1000, main= "Timber Harvest", type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
-      ylab = "NPV [1000€]") 
+      ylab = "NPV [1000Euro]") 
  lines(gridE,npv_harvest_E$X2/1000, type = "o", col = 2)
  lines(gridE,npv_harvest_E$X3/1000, type = "o", col = 3) 
  npv_harvest_E
@@ -446,13 +458,38 @@ for (r in discount_rates){
  }
  npv_harvest_E_
 
- plot(gridE, npv_harvest_E_$X1/1000, main= "Timber Harvest with end harvest", type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
-      ylab = "NPV [1000€]") 
+ plot(gridE, npv_harvest_E_$X1/1000, main= "Timber Harvest with end harvest P1", type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
+      ylab = "NPV [1000Euro]") 
  lines(gridE,npv_harvest_E_$X2/1000, type = "o", col = 2)
  lines(gridE,npv_harvest_E_$X3/1000, type = "o", col = 3) 
  #lines(gridE,npv_harvest_E$X2/1000, type = "o", col = 4)
  #lines(gridE,npv_harvest_E$X3/1000, type = "o", col = 5) 
  
+ 
+ ##player 1 npv harvest
+ 
+ 
+ npv_harvest_E0_ = data.frame(matrix(ncol = length(discount_rates), nrow = length(gridE)))
+ idx = 0
+ for (r in discount_rates){
+   r = ((1+(r/100))**5-1)*100
+   idx = idx+1
+   npv <- numeric()
+   for (i in seq_along(gridE)){
+     print(r)
+     npv <- c(npv,discount(unlist(profits_E0_[i]),r ,calculate_NPV=TRUE))
+   }
+   npv_harvest_E0_[idx] = npv
+ }
+ 
+
+ 
+ plot(gridE, npv_harvest_E0_$X1/1000, main= "Timber Harvest with end harvest", type = "o", col = 1, ylim=c(0,50), xlab = "%-per-thinning",
+      ylab = "NPV [1000Euro]") 
+ lines(gridE,npv_harvest_E0_$X2/1000, type = "o", col = 2)
+ lines(gridE,npv_harvest_E0_$X3/1000, type = "o", col = 3) 
+ 
+
  
  ###NPV water
  npv_water_E = data.frame(matrix(ncol = length(discount_rates), nrow = length(gridE)))
@@ -462,7 +499,7 @@ for (r in discount_rates){
    npv <- numeric()
    for (i in seq_along(gridE)){
      #print(r)
-     profit_water = (deepP_E[i]-unlist(deepP_E[1])[2])*3.05*10/1000
+     profit_water = (deepP_E[i] -  unlist(deepP_E[1])[2])*3.05*10/1000
      profit_water[is.na(profit_water)]= 0
      npv <- c(npv,discount(unlist(profit_water),r ,calculate_NPV=TRUE))
    }
@@ -470,18 +507,18 @@ for (r in discount_rates){
  }
 
  plot(gridE, npv_water_E$X1, type = "o", main="Water Yield", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
-      ylab = "NPV [1000€]")  
+      ylab = "NPV [1000Euro]")  
  lines(gridE,npv_water_E$X2, type = "o", col = 2)
  lines(gridE,npv_water_E$X3, type = "o", col = 3) 
  
  
  plot(gridE, npv_harvest_E$X1/1000+ npv_water_E$X1, main="Total Profits", type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
-      ylab = "NPV [1000€]")  
+      ylab = "NPV [1000Euro]")  
  lines(gridE,npv_harvest_E$X2/1000+ npv_water_E$X2, type = "o", col = 2)
  lines(gridE,npv_harvest_E$X3/1000+ npv_water_E$X3, type = "o", col = 3) 
 
  plot(gridE, npv_harvest_E_$X1/1000+ npv_water_E$X1, main="Total Profits with end harvest", type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
-      ylab = "NPV [1000€]")  
+      ylab = "NPV [1000Euro]")  
  lines(gridE,npv_harvest_E_$X2/1000+ npv_water_E$X2, type = "o", col = 2)
  lines(gridE,npv_harvest_E_$X3/1000+ npv_water_E$X3, type = "o", col = 3) 
  plot(1, type = "n", axes=FALSE, xlab="", ylab="")
@@ -500,7 +537,7 @@ for (r in discount_rates){
 
  
  plot(gridE, npv_harvest_E_$X1/1000+ npv_water_E$X1, main="Total Profits with end harvest", type = "o", col = 1, ylim=c(0,500), xlab = "%-per-thinning",
-      ylab = "NPV [1000€]")  
+      ylab = "NPV [1000Euro]")  
  lines(gridE,npv_harvest_E_$X2/1000+ npv_water_E$X2, type = "o", col = 2)
  lines(gridE,npv_harvest_E_$X3/1000+ npv_water_E$X3, type = "o", col = 3) 
  

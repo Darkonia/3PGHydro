@@ -9,16 +9,15 @@ if(!require('decisionSupport')) {
   install.packages('decisionSupport')
   library('decisionSupport')
 }
-
-load_all("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro/rpackage.3PGHydro/")
+load_all("C:/Users/jfelb/Documents/GitHub/3PGHydro/rpackage.3PGHydro/")
 ?run_3PGhydro
 #
 setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
 getwd()
 #path home
-#setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
+setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
 #path office
-setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
+#setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
 
 
 
@@ -53,7 +52,7 @@ getDiameterClass <- function(x, output) {
 }
 
 
-#estimate economic profit/value of harvest based on the average prices and costs between 2000 and 2015 from the FVA (forest research institute Baden-Württemberg).
+#estimate economic profit/value of harvest based on the average prices and costs between 2000 and 2015 from the FVA (forest research institute Baden-W?rttemberg).
 moneyMaker <- function(x, output) {
   
   s <- x[3]
@@ -104,7 +103,7 @@ RocksER <- 0.2
 RocksDR <- 0.4
 
 # #Management
-# thinAges <- c(35,40,45,50,55,60,65,70,75,80)
+#thinAges <- c(35,40,45,50,55,60,65,70,75,80)
 # thinVals <- c(1271,1106,941,776,710,644,578,513,481,449)
 # thinWF <- rep(1,10)
 # thinWR <- rep(1,10)
@@ -140,14 +139,13 @@ discount_rates <- c(0,5,10)
 OutputRes <- "yearly"
 gridE <- seq(0.01,0.31, by=0.1)
 
-years <- c(30,40,50,60)
  
 
 deepP_E <- data.frame(matrix(ncol = length(gridE), nrow = -StandAgei + EndAge ))
 
 
 watery_E <- deepP_E
-harvestVol_E <- data.frame(matrix(ncol = length(gridE), nrow = length(gridE)))
+harvestVol_E <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
 colnames(harvestVol_E) <- c("return")
 harvestVol_E_ <- harvestVol_E
 profits_E <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
@@ -198,9 +196,9 @@ for (fall in gridE){
   
   
   h <-c(h, sum(out_yearly$hst_0, na.rm = TRUE) )
-  h1 <-c(h, sum(out_yearly$hst_1 , na.rm = TRUE) )
-  h_ <-c(h, sum(out_yearly$hst_0 + tail(out_yearly$st_0, n=1), na.rm = TRUE) )
-  h1_ <-c(h, sum(out_yearly$hst_1 + tail(out_yearly$st_1, n=1), na.rm = TRUE) )
+  h1 <-c(h1, sum(out_yearly$hst_1 , na.rm = TRUE) )
+  h_ <-c(h_, sum(out_yearly$hst_0 + tail(out_yearly$st_0, n=1), na.rm = TRUE) )
+  h1_ <-c(h1_, sum(out_yearly$hst_1 + tail(out_yearly$st_1, n=1), na.rm = TRUE) )
   
   
   stV <- c(stV,out_yearly$StandVol[[EndAge - StandAgei ]])

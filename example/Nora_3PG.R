@@ -1,17 +1,22 @@
 library(devtools)
 library(rBDAT)
-#install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
-#library(rpackage.3PGHydro)
+install_github("mdjahan/3PGHydro/rpackage.3PGHydro/")
+library(rpackage.3PGHydro)
 
-load_all("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro/rpackage.3PGHydro/")
-?run_3PGhydro
+
+#home
+#load_all("C:/Users/jfelb/Documents/GitHub/3PGHydro/rpackage.3PGHydro/")
+#office
+#load_all("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro/rpackage.3PGHydro/")
+#
+#?run_3PGhydro
 #
 setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
 getwd()
 #path home
-#setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
+setwd("C:/Users/jfelb/Documents/GitHub/3PGHydro/example/")
 #path office
-setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
+#setwd("C:/Users/Joaquin Felber/Documents/GitHub/3PGHydro_new/example/")
 
 
 if(!require('decisionSupport')) {
@@ -49,7 +54,7 @@ getDiameterClass <- function(x, output) {
 }
 
 
-#estimate economic profit/value of harvest based on the average prices and costs between 2000 and 2015 from the FVA (forest research institute Baden-Württemberg).
+#estimate economic profit/value of harvest based on the average prices and costs between 2000 and 2015 from the FVA (forest research institute Baden-W?rttemberg).
 moneyMaker <- function(x, output) {
   
   s <- x[3]
@@ -100,7 +105,7 @@ RocksER <- 0.2
 RocksDR <- 0.4
 
 # #Management
-# thinAges <- c(35,40,45,50,55,60,65,70,75,80)
+thinAges <- c(35,40,45,50,55,60,65,70,75,80)
 # thinVals <- c(1271,1106,941,776,710,644,578,513,481,449)
 # thinWF <- rep(1,10)
 # thinWR <- rep(1,10)
@@ -134,7 +139,7 @@ discount_rates <- c(0,5,10)
 
 #Yearly Output
 OutputRes <- "yearly"
-gridE <- seq(0.01,0.61, by=0.31)
+gridE <- seq(0.01,0.61, by=0.1)
 gridE
 years <- c(30,40,50,60)
  
@@ -145,6 +150,7 @@ deepP_E <- data.frame(matrix(ncol = length(gridE), nrow = -StandAgei + EndAge ))
 watery_E <- deepP_E
 harvestVol_E <- data.frame(matrix(ncol = length(gridE), nrow = length(gridE)))
 colnames(harvestVol_E) <- c("return")
+harvestVol_E
 harvestVol_E_ <- harvestVol_E
 profits_E <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
 profits_E_ <- data.frame(matrix(ncol = length(gridE), nrow = length(thinAges)))
@@ -177,13 +183,13 @@ for (fall in gridE){
   thinWS <- rep(1,  length(thinAges))
  
   
-  out_yearly <-  run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals, thinVals1,thinWF,thinWR,thinWS,OutputRes)
+  out_yearly <-  run_3PGhydro(climate,p,lat,StartDate,StandAgei,EndAge,WFi,WRi,WSi,StemNoi,CO2Concentration,FR,HeightEquation,SVEquation,SoilClass,EffectiveRootZoneDepth,DeepRootZoneDepth,RocksER,RocksDR,thinAges,thinVals,thinWF,thinWR,thinWS,OutputRes)
   print("flag 1")
   deepP_E[idx] = out_yearly$DeepPercolation
   watery_E[idx]<- out_yearly$DeepPercolation + out_yearly$RunOff
   h_ <-c(h, sum(out_yearly$Harvest_Vol + tail(out_yearly$StandVol, n=1), na.rm = TRUE) )
   h <- c(h, sum(out_yearly$Harvest_Vol, na.rm = TRUE) )
-
+  
 
   stV <- c(stV,out_yearly$StandVol[[EndAge - StandAgei ]])
   
@@ -264,6 +270,7 @@ for (fall in gridE){
 }
 
 
+harvestVol_E
 
 
 harvestVol_E$return <- h
@@ -451,5 +458,4 @@ for (r in discount_rates){
  # fit
  # plot(gridE, fit2degree(gridE,fit), type = "o", col = 1,)# ylim=c(0,1000)) 
  
- 
-round(0.4)
+print("Success")
